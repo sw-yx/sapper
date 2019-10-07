@@ -145,10 +145,29 @@ async function _export({
 		});
 	}
 
+	
+	// swyx: solve race condition where saving in child process is prematurely stopped by proc.kill
+	// https://github.com/sveltejs/sapper/issues/893#issuecomment-538811020
 	proc.on('message', message => {
 		if (!message.__sapper__ || message.event !== 'file') return;
 		save(message.url, message.status, message.type, message.body);
+		checkWritingDone()
 	});
+
+	var checkWritingDone = debounce(proc.kill, 10000);
+
+	function debounce(func: Function, wait: number) {
+		var timeout: any;
+		return function(this: any) {
+			var context = this, args = arguments;
+			var later = function() {
+				timeout = null;
+				func.apply(context, args);
+			};
+			clearTimeout(timeout);
+			timeout = setTimeout(later, wait);
+		};
+	};
 
 	function handle(url: URL, fetchOpts: FetchOpts, addCallback: Function) {
 		let pathname = url.pathname;
@@ -269,7 +288,8 @@ async function _export({
 
 	return new Promise(async (res, rej) => {
 		queue.setCallback('onDone', () => {
-			proc.kill();
+			// proc.kill(); // swyx: dont kill, there is a race condition here
+			checkWritingDone(); // check this instead
 			res();
 		});
 
