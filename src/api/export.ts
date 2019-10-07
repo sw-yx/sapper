@@ -145,10 +145,26 @@ async function _export({
 		});
 	}
 
+	
+	// swyx: solve race condition where saving in child process is prematurely stopped by proc.kill
+	// https://github.com/sveltejs/sapper/issues/893#issuecomment-538811020
+	let latestUrl: null | string = null; 
 	proc.on('message', message => {
 		if (!message.__sapper__ || message.event !== 'file') return;
-		save(message.url, message.status, message.type, message.body);
+		latestUrl = message.url
+		const saveresult = save(message.url, message.status, message.type, message.body);
+		if (saveresult) saveresult.then(() => checkWritingDone(message.url));
 	});
+
+	// swyx: introduced to solve race condition
+	// https://github.com/sveltejs/sapper/issues/893#issuecomment-538811020
+	function checkWritingDone(currentUrl?: string) {
+		if (latestUrl != currentUrl || queue.getLength() > 0) {
+			// dont kill
+		} else {
+			proc.kill();
+		}
+	}
 
 	function handle(url: URL, fetchOpts: FetchOpts, addCallback: Function) {
 		let pathname = url.pathname;
@@ -269,7 +285,8 @@ async function _export({
 
 	return new Promise(async (res, rej) => {
 		queue.setCallback('onDone', () => {
-			proc.kill();
+			// proc.kill(); // swyx: dont kill, there is a race condition here
+			checkWritingDone(); // check this instead
 			res();
 		});
 

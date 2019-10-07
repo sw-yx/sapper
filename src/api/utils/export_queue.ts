@@ -113,6 +113,7 @@ function exportQueue({ concurrent, handleFetch, handleResponse, fetchOpts, callb
 			urls.push(url);
 			return processQueue();
 		},
+		getLength: () => urls.length + fetching.length + saving.length,
 		setCallback: (event: string, fn: Function) => {
 			callbacks[event] = fn;
 		}
