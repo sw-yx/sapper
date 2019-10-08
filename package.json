@@ -75,7 +75,7 @@
     "build": "rm -rf dist && rollup -c",
     "prepare": "npm run build",
     "dev": "rollup -cw",
-    "prepublishOnly": "npm test",
+    "xprepublishOnly": "npm test",
     "update_mime_types": "curl http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types | grep -e \"^[^#]\" > runtime/src/server/middleware/mime-types.md"
   },
   "repository": "https://github.com/sw-yx/sapper",
