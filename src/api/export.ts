@@ -25,6 +25,7 @@ type Opts = {
 	onfile?: ({ file, size, status }: { file: string, size: number, status: number }) => void;
 	entry?: string,
 	entry_only?: boolean,
+	filter?: string,
 };
 
 type Ref = {
@@ -63,6 +64,7 @@ async function _export({
 	onfile = noop,
 	entry = '/',
 	entry_only = false,
+	filter = '',
 }: Opts = {}) {
 	basepath = basepath.replace(/^\//, '')
 
@@ -145,30 +147,6 @@ async function _export({
 		});
 	}
 
-	
-	// swyx: solve race condition where saving in child process is prematurely stopped by proc.kill
-	// https://github.com/sveltejs/sapper/issues/893#issuecomment-538811020
-	proc.on('message', message => {
-		if (!message.__sapper__ || message.event !== 'file') return;
-		save(message.url, message.status, message.type, message.body);
-		checkWritingDone()
-	});
-
-	var checkWritingDone = debounce(proc.kill, 10000);
-
-	function debounce(func: Function, wait: number) {
-		var timeout: any;
-		return function(this: any) {
-			var context = this, args = arguments;
-			var later = function() {
-				timeout = null;
-				func.apply(context, args);
-			};
-			clearTimeout(timeout);
-			timeout = setTimeout(later, wait);
-		};
-	};
-
 	function handle(url: URL, fetchOpts: FetchOpts, addCallback: Function) {
 		let pathname = url.pathname;
 		if (pathname !== '/service-worker-index.html') {
@@ -229,9 +207,8 @@ async function _export({
 				}
 			});
 
-				if (pathname !== '/service-worker-index.html' && !entry_only) {
-					const cleaned = clean_html(body);
-
+			if (pathname !== '/service-worker-index.html' && !entry_only) {
+				const cleaned = clean_html(body);
 				const base_match = /<base ([\s\S]+?)>/m.exec(cleaned);
 				const base_href = base_match && get_href(base_match[1]);
 				const base = resolve(url.href, base_href);
@@ -243,7 +220,7 @@ async function _export({
 					const attrs = match[1];
 					const href = get_href(attrs);
 
-					if (href) {
+					if (href && (!filter || urlFilters.test(href))) {
 						const url = resolve(base.href, href);
 
 						if (url.protocol === protocol && url.host === host) {
@@ -286,10 +263,14 @@ async function _export({
 		},
 	});
 
+	proc.on('message', message => {
+		if (!message.__sapper__ || message.event !== 'file') return;
+		queue.addSave(save(message.url, message.status, message.type, message.body));
+	});
+
 	return new Promise(async (res, rej) => {
 		queue.setCallback('onDone', () => {
-			// proc.kill(); // swyx: dont kill, there is a race condition here
-			checkWritingDone(); // check this instead
+			proc.kill();
 			res();
 		});
 

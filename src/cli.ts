@@ -198,124 +198,102 @@ prog
 
 				console.log('Starting server on port ' + process.env.PORT);
 				require('./server/server.js');
-			`
-            .replace(/^\t+/gm, '')
-            .trim(),
-        )
+			`.replace(/^\t+/gm, '').trim());
 
-        console.error(`\n> Finished in ${elapsed(start)}. Type ${colors.bold().cyan(`node ${dest}`)} to run the app.`)
-      } catch (err) {
-        console.log(`${colors.bold().red(`> ${err.message}`)}`)
-        console.log(colors.gray(err.stack))
-        process.exit(1)
-      }
-    },
-  )
+			console.error(`\n> Finished in ${elapsed(start)}. Type ${colors.bold().cyan(`node ${dest}`)} to run the app.`);
+		} catch (err) {
+			console.log(`${colors.bold().red(`> ${err.message}`)}`);
+			console.log(colors.gray(err.stack));
+			process.exit(1);
+		}
+	});
 
-prog
-  .command('export [dest]')
-  .describe('Export your app as static files (if possible)')
-  .option('--build', '(Re)build app before exporting', true)
-  .option('--basepath', 'Specify a base path')
-  .option('--host', 'Host header to use when crawling site')
-  .option('--concurrent', 'Concurrent requests', 8)
-  .option('--timeout', 'Milliseconds to wait for a page (--no-timeout to disable)', 5000)
-  .option('--legacy', 'Create separate legacy build')
-  .option('--bundler', 'Specify a bundler (rollup or webpack, blank for auto)')
-  .option('--cwd', 'Current working directory', '.')
-  .option('--src', 'Source directory', 'src')
-  .option('--routes', 'Routes directory', 'src/routes')
-  .option('--static', 'Static files directory', 'static')
-  .option('--output', 'Sapper intermediate file output directory', 'src/node_modules/@sapper')
-  .option('--build-dir', 'Intermediate build directory', '__sapper__/build')
-  .option('--ext', 'Custom page route extensions (space separated)', '.svelte .html')
-  .option('--entry', 'Custom entry points (space separated)', '/')
-  .option('--entry_only', 'Render only the entry points')
-  .option('--filter', 'Space delimited regular expression syntax whitelist for link crawling')
-  .action(
-    async (
-      dest = '__sapper__/export',
-      opts: {
-        build: boolean
-        legacy: boolean
-        bundler?: 'rollup' | 'webpack'
-        basepath?: string
-        host?: string
-        concurrent: number
-        timeout: number | false
-        cwd: string
-        src: string
-        routes: string
-        static: string
-        output: string
-        'build-dir': string
-        ext: string
-        entry: string
-        entry_only: boolean
-        filter: string
-      },
-    ) => {
-      try {
-        if (opts.build) {
-          console.log(`> Building...`)
-          await _build(
-            opts.bundler,
-            opts.legacy,
-            opts.cwd,
-            opts.src,
-            opts.routes,
-            opts.output,
-            opts['build-dir'],
-            opts.ext,
-          )
-          console.error(`\n> Built in ${elapsed(start)}`)
-        }
+prog.command('export [dest]')
+	.describe('Export your app as static files (if possible)')
+	.option('--build', '(Re)build app before exporting', true)
+	.option('--basepath', 'Specify a base path')
+	.option('--host', 'Host header to use when crawling site')
+	.option('--concurrent', 'Concurrent requests', 8)
+	.option('--timeout', 'Milliseconds to wait for a page (--no-timeout to disable)', 5000)
+	.option('--legacy', 'Create separate legacy build')
+	.option('--bundler', 'Specify a bundler (rollup or webpack, blank for auto)')
+	.option('--cwd', 'Current working directory', '.')
+	.option('--src', 'Source directory', 'src')
+	.option('--routes', 'Routes directory', 'src/routes')
+	.option('--static', 'Static files directory', 'static')
+	.option('--output', 'Sapper intermediate file output directory', 'src/node_modules/@sapper')
+	.option('--build-dir', 'Intermediate build directory', '__sapper__/build')
+	.option('--ext', 'Custom page route extensions (space separated)', '.svelte .html')
+	.option('--entry', 'Custom entry points (space separated)', '/')
+	.option('--entry_only', 'Render only the entry points')
+	.option('--filter', 'Space delimited regular expression syntax whitelist for link crawling')
+	.action(async (dest = '__sapper__/export', opts: {
+		build: boolean,
+		legacy: boolean,
+		bundler?: 'rollup' | 'webpack',
+		basepath?: string,
+		host?: string,
+		concurrent: number,
+		timeout: number | false,
+		cwd: string,
+		src: string,
+		routes: string,
+		static: string,
+		output: string,
+		'build-dir': string,
+		ext: string,
+		entry: string,
+		entry_only: boolean,
+		filter: string,
+	}) => {
+		try {
+			if (opts.build) {
+				console.log(`> Building...`);
+				await _build(opts.bundler, opts.legacy, opts.cwd, opts.src, opts.routes, opts.output, opts['build-dir'], opts.ext);
+				console.error(`\n> Built in ${elapsed(start)}`);
+			}
 
-        const { export: _export } = await import('./api/export')
-        const { default: pb } = await import('pretty-bytes')
+			const { export: _export } = await import('./api/export');
+			const { default: pb } = await import('pretty-bytes');
 
-        await _export({
-          cwd: opts.cwd,
-          static: opts.static,
-          build_dir: opts['build-dir'],
-          export_dir: dest,
-          basepath: opts.basepath,
-          host_header: opts.host,
-          timeout: opts.timeout,
-          concurrent: opts.concurrent,
-          entry: opts.entry,
-          entry_only: opts.entry_only,
-          filter: opts.filter,
+			await _export({
+				cwd: opts.cwd,
+				static: opts.static,
+				build_dir: opts['build-dir'],
+				export_dir: dest,
+				basepath: opts.basepath,
+				host_header: opts.host,
+				timeout: opts.timeout,
+				concurrent: opts.concurrent,
+				entry: opts.entry,
+				entry_only: opts.entry_only,
+				filter: opts.filter,
 
-          oninfo: (event) => {
-            console.log(colors.bold().cyan(`> ${event.message}`))
-          },
+				oninfo: event => {
+					console.log(colors.bold().cyan(`> ${event.message}`));
+				},
 
-          onfile: (event) => {
-            const size_color =
-              event.size > 150000 ? colors.bold().red : event.size > 50000 ? colors.bold().yellow : colors.bold().gray
-            const size_label = size_color(left_pad(pb(event.size), 10))
+				onfile: event => {
+					const size_color = event.size > 150000 ? colors.bold().red : event.size > 50000 ? colors.bold().yellow : colors.bold().gray;
+						const size_label = size_color(left_pad(pb(event.size), 10));
 
-            const file_label =
-              event.status === 200
-                ? event.file
-                : colors.bold()[event.status >= 400 ? 'red' : 'yellow'](`(${event.status}) ${event.file}`)
+						const file_label = event.status === 200
+							? event.file
+							: colors.bold()[event.status >= 400 ? 'red' : 'yellow'](`(${event.status}) ${event.file}`);
 
-            console.log(`${size_label}   ${file_label}`)
-          },
-        })
+						console.log(`${size_label}   ${file_label}`);
+				}
+			});
 
-        console.error(
-          `\n> Finished in ${elapsed(start)}. Type ${colors.bold().cyan(`npx serve ${dest}`)} to run the app.`,
-        )
-      } catch (err) {
-        console.error(colors.bold().red(`> ${err.message}`))
-        process.exit(1)
-      }
-    },
-  )
+			console.error(`\n> Finished in ${elapsed(start)}. Type ${colors.bold().cyan(`npx serve ${dest}`)} to run the app.`);
+		} catch (err) {
+			console.error(colors.bold().red(`> ${err.message}`));
+			process.exit(1);
+		}
+	});
 
-prog.parse(process.argv, { unknown: (arg: string) => `Unknown option: ${arg}` })
+prog.parse(process.argv, { unknown: (arg: string) => `Unknown option: ${arg}` });
+
 
 async function _build(
   bundler: 'rollup' | 'webpack',
