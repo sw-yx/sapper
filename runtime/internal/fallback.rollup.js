@@ -35,7 +35,16 @@ const dedupe = (importee) => importee === 'svelte' || importee.startsWith('svelt
 
 const extensions = ['.svelte', '.svexy', '.svx', '.md']
 const preprocess = [
-  sveltePreprocess({ /* svelte-preprocess options */ }),
+  sveltePreprocess({ 
+    /* svelte-preprocess options */ 
+    // https://github.com/kaisermann/svelte-preprocess/blob/4287ee8fc57132688d9e7a22bf313bd91b6afcd7/README.md#options
+    aliases: [
+      ["ts", 'typescript']
+    ],
+    typescript: {
+      transpileOnly: true
+    }
+  }),
   mdsvex({
     // extension: '.svexy', // the default is '.svexy', if you lack taste, you might want to change it
     // layout: path.join(__dirname, './src/routes/_layout.svelte'), // this needs to be an absolute path
