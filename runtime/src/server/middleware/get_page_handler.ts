@@ -104,10 +104,6 @@ export function get_page_handler(
 			error: (statusCode: number, message: Error | string) => {
 				preload_error = { statusCode, message };
 			},
-			ssgData: (key: string = 'ssgCoreData', id: string = 'index') => {
-				const parsed = new URL.URL(`/data/${key}___ssg___${id}.json`, `http://127.0.0.1:${process.env.PORT}${req.baseUrl ? req.baseUrl + '/' :''}`);
-				return fetch(parsed.href).then(r => r.json()).then(data => ({ data }))
-			},
 			fetch: (url: string, opts?: any) => {
 				const parsed = new URL.URL(url, `http://127.0.0.1:${process.env.PORT}${req.baseUrl ? req.baseUrl + '/' :''}`);
 
