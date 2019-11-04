@@ -10,5 +10,6 @@ It includes:
 - fallback rollup.config.js https://github.com/sw-yx/sapper/pull/2 and https://github.com/sw-yx/sapper/pull/1
 - fallback client/server/template https://github.com/sw-yx/sapper/pull/3
 - this fix for the JSON race condition issue https://github.com/nealalpert/sapper/commit/3247d504cb4c7cf3f71e57614697e2b559b40138
+- a new `this.ssgData` api that is a light wrapper around `this.fetch` in preload for more ergonomic ssg usage https://github.com/sw-yx/sapper/pull/7
 
 We maintain this fork because we feel pain points around sapper static export, and still have hope it is merged upstream one day.

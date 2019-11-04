@@ -282,6 +282,7 @@ export async function hydrate_target(target: Target): Promise<{
 
 	const preload_context = {
 		fetch: (url: string, opts?: any) => fetch(url, opts),
+		ssgData: (key: string = 'ssgCoreData', id: string = 'index') => fetch(`/data/${key}___ssg___${id}.json`).then(r => r.json()).then(data => ({ data })),
 		redirect: (statusCode: number, location: string) => {
 			if (redirect && (redirect.statusCode !== statusCode || redirect.location !== location)) {
 				throw new Error(`Conflicting redirects`);
