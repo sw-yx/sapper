@@ -104,7 +104,8 @@ export function get_page_handler(
 			error: (statusCode: number, message: Error | string) => {
 				preload_error = { statusCode, message };
 			},
-			ssgData: ({key = 'ssgCoreData', id = 'index'}: {key?: string, id?: string}) => {
+			ssgData: (opts: {key?: string, id?: string}) => {
+				const {key = 'ssgCoreData', id = 'index'} = opts || {}
 				const parsed = new URL.URL(`/data/${key}___ssg___${id}.json`, `http://127.0.0.1:${process.env.PORT}${req.baseUrl ? req.baseUrl + '/' :''}`);
 				return fetch(parsed.href).then(r => r.json())
 			},
