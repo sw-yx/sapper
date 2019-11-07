@@ -60,6 +60,7 @@ function exportQueue({ concurrent, handleFetch, handleResponse, fetchOpts, callb
 	const urls: URL[] = [];
 	let fetching : Promise<any>[] = [];
 	let saving : Promise<any>[] = [];
+	let timeoutId: NodeJS.Timer | null = null
 
 	function addToQueue(p: Promise<any>, queue: Promise<any>[]) {
 		const queuePromise = new Promise((res, rej) => {
@@ -94,7 +95,9 @@ function exportQueue({ concurrent, handleFetch, handleResponse, fetchOpts, callb
 		}
 
 		if (urls.length === 0 && saving.length === 0 && fetching.length === 0) {
-			return callbacks.onDone();
+			if (timeoutId) clearTimeout(timeoutId)
+			timeoutId = setTimeout(callbacks.onDone, 500)
+			return // dont bother returning anything
 		}
 
 		return urls.length + fetching.length + saving.length;
